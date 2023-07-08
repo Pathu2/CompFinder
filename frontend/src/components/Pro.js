@@ -1,94 +1,206 @@
-import React from "react";
-import "./Pro.css";
+import React, { useEffect, useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+
 function Pro() {
+  const [details, setdetails] = useState("");
+  const [author, setauthor] = useState("");
+  const [nivedanUsers, setNivedanUsers] = useState([]);
+  const [accUsers, setaccUsers] = useState([]);
+  const [currPro, setcurrPro] = useState("");
+  const params = useParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    getEvent();
+  }, []);
+
+  useEffect(() => {
+    getAuthor();
+  }, [details]);
+
+  const getEvent = () => {
+    fetch(`http://localhost:3000/details/${params.id}`, {
+      method: "GET",
+      headers: {
+        authorization: `bearer ${JSON.parse(localStorage.getItem("token"))}`,
+      },
+    })
+      .then((result) => {
+        if (result.ok) {
+          return result.json();
+        } else {
+          throw new Error("Failed to fetch event details");
+        }
+      })
+      .then((data) => {
+        setdetails(data);
+        setNivedanUsers(data.nivedan);
+        setaccUsers(data.acc);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+  const id = params.id;
+  console.log(id);
+  const getAuthor = () => {
+    fetch(`http://localhost:3000/author/${details.userID}`, {
+      method: "GET",
+      headers: {
+        authorization: `bearer ${JSON.parse(localStorage.getItem("token"))}`,
+      },
+    })
+      .then((result) => {
+        if (result.ok) {
+          return result.json();
+        } else {
+          throw new Error("Failed to fetch author details");
+        }
+      })
+      .then((data) => {
+        setauthor(data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  const deleted = (_id) => {
+    fetch(`http://localhost:3000/getAll/${_id}`, {
+      method: "DELETE",
+      headers: {
+        authorization: `bearer ${JSON.parse(localStorage.getItem("token"))}`,
+      },
+    }).then((result) => {
+      if (result) {
+        alert("DELETED SUCCESSFULLY");
+        navigate("/event");
+      }
+    });
+  };
+
+  const handlerequest = () => {
+    const formdata = new FormData();
+    formdata.append("name", JSON.parse(localStorage.getItem("user")).name);
+    formdata.append("email", JSON.parse(localStorage.getItem("user")).email);
+    fetch(`http://localhost:3000/request/${id}`, {
+      method: "put",
+    })
+      .then(() => {
+        getEvent();
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
   return (
-    <>
-      <div className="card-wrapper">
-        <div className="card">
-          <div className="product-imgs">
-            <img src="..." alt="kuch toh hai"/>
-          </div>
+    <div className="container mt-20">
+      <div className="row" style={{ marginTop: "15px", marginBottom: "15px" }}>
+        <div className="col-7">
+          <div className="card" style={{ width: "auto" }}>
+            <img src={details.image} className="card-img-top" alt="..." />
 
-          <div className="product-content">
-            <h2 className="product-title">nike shoes</h2>
-            <div className="product-rating">
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star-half-alt"></i>
-              <span>4.7(21)</span>
+            <div className="card-body">
+              <h5 className="card-title">{details.event}</h5>
+              <p className="card-text">{details.address}</p>
             </div>
-
-            <div className="product-price">
-              <p className="new-price">
-                Price: <span>$249.00 (5%)</span>
-              </p>
-            </div>
-
-            <div className="product-detail">
-              <h2>About this item: </h2>
-              <p>
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Illo
-                eveniet veniam tempora fuga tenetur placeat sapiente architecto
-                illum soluta consequuntur, aspernatur quidem at sequi ipsa!
-              </p>
-              <p>
-                Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                Consequatur, perferendis eius. Dignissimos, labore suscipit.
-                Unde.
-              </p>
-              <ul>
-                <li>
-                  Color: <span>Black</span>
-                </li>
-                <li>
-                  Available: <span>in stock</span>
-                </li>
-                <li>
-                  Category: <span>Shoes</span>
-                </li>
-                <li>
-                  Shipping Area: <span>All over the world</span>
-                </li>
-                <li>
-                  Shipping Fee: <span>Free</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="purchase-info">
-              <input type="number" min="0" value="1" />
-              <button type="button" className="btn">
-                Add to Cart <i className="fas fa-shopping-cart"></i>
-              </button>
-              <button type="button" className="btn">
-                Compare
-              </button>
-            </div>
-
-            <div className="social-links">
-              <p>Share At: </p>
-              <a href="/">
-                <i className="fab fa-facebook-f"></i>
-              </a>
-              <a href="/">
-                <i className="fab fa-twitter"></i>
-              </a>
-              <a href="/">
-                <i className="fab fa-instagram"></i>
-              </a>
-              <a href="/">
-                <i className="fab fa-whatsapp"></i>
-              </a>
-              <a href="/">
-                <i className="fab fa-pinterest"></i>
-              </a>
-            </div>
+            <ul className="list-group list-group-flush">
+              <li className="list-group-item">Submitted by: {author.name}</li>
+              <li className="list-group-item">{details.discription}</li>
+              <li className="list-group-item">
+                <b>Price:</b> {details.entryFee}
+              </li>
+              <li className="list-group-item">
+                <b>Maximum Members:</b> {details.MaxMem}
+              </li>
+            </ul>
+            {details.userID === JSON.parse(localStorage.getItem("user"))._id ? (
+              <div className="d-flex">
+                <Link
+                  type="button"
+                  className="btn btn-primary p-2 flex-fill"
+                  to={"/update/" + details._id}
+                >
+                  Edit
+                </Link>
+                <button
+                  type="button"
+                  className="btn btn-danger p-2 flex-fill"
+                  onClick={() => deleted(details._id)}
+                >
+                  Delete
+                </button>
+              </div>
+            ) : (
+              <></>
+            )}
           </div>
         </div>
+        <div className="col-5 d-flex flex-column">
+          {details.userID !== JSON.parse(localStorage.getItem("user"))._id ? (
+            <>
+              <h2 style={{ textAlign: "left" }}>Want to be part of the team</h2>
+              <div className="card-body">
+                <button
+                  className="btn btn-primary text-white text-right"
+                  onClick={handlerequest}
+                >
+                  Request
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="card-body">
+                <h2>Requested Users:</h2>
+                <ul style={{ maxHeight: "400px", overflow: "scroll" }}>
+                  {nivedanUsers.map((user, index) => (
+                    <>
+                      <li key={index}>
+                        <p>Name: {user.name}</p>
+                        <p>Email: {user.email}</p>
+                      </li>
+                      <button
+                        className="btn btn-primary mb-2"
+                        onClick={handleaccept}
+                      >
+                        Accept
+                      </button>
+                    </>
+                  ))}
+                </ul>
+              </div>
+              <div className="card-body">
+                <h2>Accepted Users:</h2>
+                <ul style={{ maxHeight: "400px", overflow: "scroll" }}>
+                  {accUsers.map((user, index) => (
+                    <>
+                      <li key={index}>
+                        <p>Name: {user.name}</p>
+                        <p>Email: {user.email}</p>
+                      </li>
+                      <button
+                        className="btn btn-danger mb-2"
+                        onClick={handleremove}
+                      >
+                        Remove
+                      </button>
+                    </>
+                  ))}
+                </ul>
+                <button
+                  className="btn btn-primary"
+                  disabled={details.MaxMem !== accUsers.length}
+                >
+                  Complete
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 

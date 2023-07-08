@@ -5,9 +5,12 @@ const mongoose = require("mongoose");
 const user = require("./models/user");
 const product = require("./models/product");
 const cors = require("cors");
+const bcrypt = require("bcryptjs");
 const db =
   "mongodb+srv://bhaisab:test1234@nodejs.xgp9aar.mongodb.net/NodeJS?retryWrites=true&w=majority";
 const app = express();
+const Jwt = require('jsonwebtoken');
+const jwtKey="bhaisab@1$";
 app.use(express.json());
 // app.use(bodyParser.json());
 app.use(cors());
@@ -34,13 +37,24 @@ app.get("/", (req, resp) => {
 });
 
 
-app.post("/new-product", (req, res) => {
+app.post("/new-user", async (req, res) => {
   console.log("New user in the making");
-  const newuser = new user(req.body);
+  const salt = await bcrypt.genSalt(10); 
+  const bcryptPass = await bcrypt.hash(req.body.password, salt);
+  const newuser = new user({
+    name: req.body.name,
+    email: req.body.email,
+    password: bcryptPass
+  });
   newuser
     .save()
     .then((result) => {
-      res.send(result);
+      Jwt.sign({result}, jwtKey, {expiresIn: "2h"}, (err, token)=>{
+        if(err){
+          res.send({result: "Something went wrong please try again later."})
+        }
+        res.send({result, auth:token});
+      })
     })
     .catch((err) => {
       console.log(err);
@@ -50,12 +64,27 @@ app.post("/new-product", (req, res) => {
 app.post("/login", (req, res) => {
   console.log("Login kar raha");
   if (req.body.password && req.body.email) {
-    const exsit = user
-      .findOne(req.body)
-      .select("-password")
-      .then((result) => {
-        if (result) {
-          res.send(result);
+    user.findOne({ email: req.body.email })
+      .then((foundUser) => {
+        if (foundUser) {
+          // Compare the entered password with the hashed password
+          bcrypt.compare(req.body.password, foundUser.password)
+            .then((isMatch) => {
+              if (isMatch) {
+                Jwt.sign({ result: foundUser }, jwtKey, { expiresIn: "2h" }, (err, token) => {
+                  if (err) {
+                    res.send({ result: "Something went wrong. Please try again later." });
+                  } else {
+                    res.send({ result: foundUser, auth: token });
+                  }
+                });
+              } else {
+                res.send("Invalid password");
+              }
+            })
+            .catch((err) => {
+              console.log(err);
+            });
         } else {
           res.send("No user exists");
         }
@@ -68,12 +97,13 @@ app.post("/login", (req, res) => {
   }
 });
 
-app.post("/add-product", upload.single('image'), (req, res) => {
+
+app.post("/add-event", verifyToken, upload.single('image'), (req, res) => {
   const newproduct = new product({
-    name: req.body.name,
-    category: req.body.category,
-    company: req.body.company,
-    price: req.body.price,
+    event: req.body.event,
+    MaxMem: req.body.MaxMem,
+    address: req.body.address,
+    entryFee: req.body.entryFee,
     userID: req.body.userID,
     discription: req.body.discription,
     image: req.body.image
@@ -98,7 +128,7 @@ app.get("/getAll", (req, res)=>{
     })
 });
 
-app.delete("/getAll/:id", (req, res)=>{
+app.delete("/getAll/:id", verifyToken, (req, res)=>{
    product.deleteOne({_id: req.params.id})
     .then((result)=>{
       res.send(result);
@@ -108,7 +138,18 @@ app.delete("/getAll/:id", (req, res)=>{
     })
 });
 
-app.get("/update/:id", (req, res)=>{
+app.get("/author/:id", verifyToken, (req, res)=>{
+  user.findOne({_id: req.params.id})
+   .then((result)=>{
+     res.send(result);
+     console.log(result);
+   })
+   .catch((err)=>{
+     console.log(err);
+   })
+});
+
+app.get("/update/:id", verifyToken, (req, res)=>{
   product.findOne({_id:req.params.id})
   .then((result)=>{
     if (result) {
@@ -123,7 +164,22 @@ app.get("/update/:id", (req, res)=>{
   })
 });
 
-app.get("/product/:id", (req, res)=>{
+app.get("/details/:id", verifyToken, (req, res)=>{
+  product.findOne({_id:req.params.id})
+  .then((result)=>{
+    if (result) {
+      res.send(result);
+    }
+    else{
+      res.send("Nahi hai")
+    }
+  })
+  .catch((err)=>{
+    console.log(err);
+  })
+});
+
+app.get("/event/:id", verifyToken, (req, res)=>{
   product.findOne({_id:req.params.id})
   .then((result)=>{
     if (result) {
@@ -139,7 +195,7 @@ app.get("/product/:id", (req, res)=>{
   })
 });
 
-app.put("/update/:id", (req, res)=>{
+app.put("/update/:id", verifyToken, (req, res)=>{
   product.updateOne(
     {
       _id: req.params.id
@@ -153,7 +209,7 @@ app.put("/update/:id", (req, res)=>{
   })
 })
 
-app.get("/search/:key", (req, res)=>{
+app.get("/search/:key", verifyToken, (req, res)=>{
   product.find({
     "$or" : [
       {name: {$regex: req.params.key}},
@@ -172,4 +228,41 @@ app.get("/search/:key", (req, res)=>{
   .catch((err)=>{
     console.log(err);
   });
-})
+});
+
+function verifyToken(req, res, next){
+  let token = req.headers['authorization'];
+  if (token) {
+    token=token.split(' ')[1];
+    Jwt.verify(token, jwtKey, (err, valid)=>{
+      if(err){
+        res.status(401).send({result: "Invalid token"})
+      }else{
+        next();
+      }
+    })
+  }else{
+    res.status(403).send({result: "Invalid User"})
+  }
+}
+
+app.put('/request/:id', (req, res) => {
+  console.log(req.body);
+  product.updateOne(
+    {
+      _id: req.params.id
+    },
+    {
+      $push: {
+        nivedan: req.body
+      }
+    }
+  )
+    .then(result => {
+      res.send(result);
+    })
+    .catch(err => {
+      res.status(422).json({ error: err });
+    });
+});
+

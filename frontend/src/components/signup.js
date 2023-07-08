@@ -42,8 +42,9 @@ function Signup() {
       .then((result) => result.json())
       .then((result) => {
         console.log(result);
-        nagivate('/');
-        localStorage.setItem("user", JSON.stringify(result));
+        nagivate('/event');
+        localStorage.setItem("user", JSON.stringify(result.result));
+        localStorage.setItem("token", JSON.stringify(result.auth));
       })
       .catch((error) => {
         console.error(error);

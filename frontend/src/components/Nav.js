@@ -16,7 +16,7 @@ function Nav() {
       >
         <div className="container-fluid">
           <Link className="navbar-brand" to="/">
-            SwapIt
+            CompFinder
           </Link>
           <button
             className="navbar-toggler"
@@ -33,26 +33,21 @@ function Nav() {
             {auth ? (
               <ul className="navbar-nav me-auto mb-2 mb-lg-0">
                 <li className="nav-item">
-                  <Link className="nav-link active" aria-current="page" to="/">
-                    Home
+                  <Link
+                    className="nav-link active"
+                    aria-current="page"
+                    to="/event"
+                  >
+                   Events
                   </Link>
                 </li>
                 <li className="nav-item">
                   <Link
                     className="nav-link active"
                     aria-current="page"
-                    to="/product"
+                    to="/add-event"
                   >
-                   Product
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link
-                    className="nav-link active"
-                    aria-current="page"
-                    to="/add-product"
-                  >
-                    Add Product
+                    Add Event
                   </Link>
                 </li>
                 <li className="nav-item">

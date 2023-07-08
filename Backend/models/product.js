@@ -1,20 +1,20 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-
+const {ObjectID} = mongoose.Schema.Types;
 const productSchema = new Schema({
-    name:{
+    event:{
         type: String,
         required: true
     },
-    category:{
+    MaxMem:{
         type: String,
         required: true
     },
-    company:{
+    address:{
         type: String,
         required: true
     },
-    price:{
+    entryFee:{
         type: String,
         required: true
     },
@@ -29,7 +29,27 @@ const productSchema = new Schema({
     image:{
         type: String,
         required: true
-    }
+    },
+    nivedan:[
+        {
+          name: {
+            type: String,
+          },
+          email: {
+            type: String,
+          },
+        },
+    ], 
+    acc:[
+        {
+          name: {
+            type: String,
+          },
+          email: {
+            type: String,
+          },
+        },
+    ], 
 })
 
 const product = mongoose.model('products', productSchema);

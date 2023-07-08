@@ -26,8 +26,9 @@ function Login() {
         .then((result)=>{
             console.log(result);
             nagivate('/');
-            localStorage.setItem("user", JSON.stringify(result));
-        })
+            localStorage.setItem("user", JSON.stringify(result.result));
+            localStorage.setItem("token", JSON.stringify(result.auth));
+        })  
         .catch((err)=>{
             console.log(err);
         });
