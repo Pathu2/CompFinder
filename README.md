@@ -1,2 +1,2 @@
-# SwapIt
+# CompFinder-Find your Game
  
