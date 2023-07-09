@@ -7,6 +7,7 @@ function Pro() {
   const [nivedanUsers, setNivedanUsers] = useState([]);
   const [accUsers, setaccUsers] = useState([]);
   const [currPro, setcurrPro] = useState("");
+  const [notmore, setnotmore]= useState(false);
   const params = useParams();
   const navigate = useNavigate();
 
@@ -79,14 +80,16 @@ function Pro() {
     });
   };
 
-  const handlerequest = () => {
+  const handlerequest = (_id) => {
     const formdata = new FormData();
     formdata.append("name", JSON.parse(localStorage.getItem("user")).name);
     formdata.append("email", JSON.parse(localStorage.getItem("user")).email);
-    fetch(`http://localhost:3000/request/${id}`, {
+    fetch(`http://localhost:3000/request/${_id}`, {
       method: "put",
     })
       .then(() => {
+        alert("Request Successfully");
+        setnotmore(true);
         getEvent();
       })
       .catch((err) => {
@@ -144,7 +147,8 @@ function Pro() {
               <div className="card-body">
                 <button
                   className="btn btn-primary text-white text-right"
-                  onClick={handlerequest}
+                  onClick={()=>handlerequest(details._id)}
+                  disabled={notmore}
                 >
                   Request
                 </button>

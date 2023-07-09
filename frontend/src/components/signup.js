@@ -26,7 +26,7 @@ function Signup() {
     /*We used fetch function here to get the data from the server when we hit submit */
 
     /*******Fetch for post**********/
-    fetch("http://localhost:3000/new-product", {
+    fetch("http://localhost:3000/new-user", {
       method: "post",
       headers: {
         "Content-Type": "application/json",
