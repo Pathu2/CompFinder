@@ -163,7 +163,7 @@ function Pro() {
                       </li>
                       <button
                         className="btn btn-primary mb-2"
-                        onClick={handleaccept}
+                        
                       >
                         Accept
                       </button>
@@ -182,7 +182,7 @@ function Pro() {
                       </li>
                       <button
                         className="btn btn-danger mb-2"
-                        onClick={handleremove}
+                        
                       >
                         Remove
                       </button>
