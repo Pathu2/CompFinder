@@ -38,6 +38,9 @@ const productSchema = new Schema({
           email: {
             type: String,
           },
+          userid:{
+            type: String,
+          },
         },
     ], 
     acc:[
@@ -46,6 +49,9 @@ const productSchema = new Schema({
             type: String,
           },
           email: {
+            type: String,
+          },
+          userid:{
             type: String,
           },
         },

@@ -9,7 +9,7 @@ function Login() {
         const auth = localStorage.getItem("user");
         if(auth)
         {
-          nagivate('/');
+          nagivate('/event');
         }
       })
     const submitted=()=>{
@@ -25,7 +25,7 @@ function Login() {
             result.json())
         .then((result)=>{
             console.log(result);
-            nagivate('/');
+            nagivate('/event');
             localStorage.setItem("user", JSON.stringify(result.result));
             localStorage.setItem("token", JSON.stringify(result.auth));
         })  

@@ -107,7 +107,7 @@ function Event() {
             </div>
           </div>
         )))
-      :(<h3>Nahi hai kuch aaisa</h3>)}
+      :(<h3>No result</h3>)}
     </div>
   );
 }

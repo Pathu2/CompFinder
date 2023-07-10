@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
-function Pro() {
+function View() {
   const [details, setdetails] = useState("");
   const [author, setauthor] = useState("");
   const [nivedanUsers, setNivedanUsers] = useState([]);
   const [accUsers, setaccUsers] = useState([]);
   const [currPro, setcurrPro] = useState("");
-  const [notmore, setnotmore]= useState(false);
+  const [notmore, setnotmore] = useState(false);
   const params = useParams();
   const navigate = useNavigate();
 
@@ -42,8 +44,6 @@ function Pro() {
         console.log(error);
       });
   };
-  const id = params.id;
-  console.log(id);
   const getAuthor = () => {
     fetch(`http://localhost:3000/author/${details.userID}`, {
       method: "GET",
@@ -81,13 +81,18 @@ function Pro() {
   };
 
   const handlerequest = (_id) => {
-    const formdata = new FormData();
-    formdata.append("name", JSON.parse(localStorage.getItem("user")).name);
-    formdata.append("email", JSON.parse(localStorage.getItem("user")).email);
+    const addname = JSON.parse(localStorage.getItem("user")).name;
+    const addemail = JSON.parse(localStorage.getItem("user")).email;
+    const addID = JSON.parse(localStorage.getItem("user"))._id;
     fetch(`http://localhost:3000/request/${_id}`, {
       method: "put",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ addname, addemail, addID }),
     })
-      .then(() => {
+      .then((result) => {
+        console.log(result);
         alert("Request Successfully");
         setnotmore(true);
         getEvent();
@@ -95,6 +100,109 @@ function Pro() {
       .catch((err) => {
         console.log(err);
       });
+  };
+  const revertrequest = (_id) => {
+    const revertuserid = JSON.parse(localStorage.getItem("user"))._id;
+    fetch(`http://localhost:3000/revert/${_id}`, {
+      method: "put",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ revertuserid }),
+    })
+      .then((result) => {
+        console.log(result);
+        alert("Revert Successfully");
+        getEvent();
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+  const handleaccept = (_id, acceptname, acceptemail, acceptuserid) => {
+    fetch(`http://localhost:3000/accept/${_id}`, {
+      method: "put",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ acceptname, acceptemail, acceptuserid }),
+    })
+      .then((result) => {
+        console.log(result);
+        getEvent();
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  const handleremove = (_id, removename, removeemail, removeuserid) => {
+    fetch(`http://localhost:3000/remove/${_id}`, {
+      method: "put",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ removename, removeemail, removeuserid }),
+    })
+      .then((result) => {
+        console.log(result);
+        getEvent();
+        console.log(accUsers.length);
+        console.log(nivedanUsers.length);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+  const currentuser = JSON.parse(localStorage.getItem("user"))._id;
+  const check = (currentuser) => {
+    const foundElement = nivedanUsers.find(
+      (element) => element.userid === currentuser
+    );
+    if (foundElement) {
+      return false;
+    } else {
+      return true;
+    }
+  };
+
+  const handlecomplete = (_id) => {
+    const result = window.confirm("Do you want to proceed?");
+    if (result) {
+      const headers = ["Name", "Email"]; // Add more columns as needed
+      const data = accUsers.map((user) => [user.name, user.email]); // Modify the properties as per your array structure
+
+      const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet 1");
+
+      const excelFile = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+      const blob = new Blob([excelFile], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      saveAs(blob, "array_data.xlsx");
+
+     
+        fetch(`http://localhost:3000/getAll/${_id}`, {
+          method: "DELETE",
+          headers: {
+            authorization: `bearer ${JSON.parse(localStorage.getItem("token"))}`,
+          },
+        }).then((result) => {
+          if (result) {
+            alert("DELETED SUCCESSFULLY");
+            navigate("/event");
+          }
+        });
+    }
+    else
+    {
+      return;
+    }
   };
 
   return (
@@ -143,16 +251,34 @@ function Pro() {
         <div className="col-5 d-flex flex-column">
           {details.userID !== JSON.parse(localStorage.getItem("user"))._id ? (
             <>
-              <h2 style={{ textAlign: "left" }}>Want to be part of the team</h2>
-              <div className="card-body">
-                <button
-                  className="btn btn-primary text-white text-right"
-                  onClick={()=>handlerequest(details._id)}
-                  disabled={notmore}
-                >
-                  Request
-                </button>
-              </div>
+              {check(currentuser) ? (
+                <>
+                  <h2 style={{ textAlign: "left" }}>
+                    Want to be part of the team
+                  </h2>
+                  <div className="card-body">
+                    <button
+                      className="btn btn-primary text-white text-right"
+                      onClick={() => handlerequest(details._id)}
+                      disabled={notmore}
+                    >
+                      Request
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h4 style={{ textAlign: "left" }}>Already Requested</h4>
+                  <div className="card-body">
+                    <button
+                      className="btn btn-primary text-white text-right"
+                      onClick={() => revertrequest(details._id)}
+                    >
+                      Revert
+                    </button>
+                  </div>
+                </>
+              )}
             </>
           ) : (
             <>
@@ -167,7 +293,14 @@ function Pro() {
                       </li>
                       <button
                         className="btn btn-primary mb-2"
-                        
+                        onClick={() =>
+                          handleaccept(
+                            details._id,
+                            user.name,
+                            user.email,
+                            user.userid
+                          )
+                        }
                       >
                         Accept
                       </button>
@@ -186,7 +319,14 @@ function Pro() {
                       </li>
                       <button
                         className="btn btn-danger mb-2"
-                        
+                        onClick={() =>
+                          handleremove(
+                            details._id,
+                            user.name,
+                            user.email,
+                            user.userid
+                          )
+                        }
                       >
                         Remove
                       </button>
@@ -195,7 +335,8 @@ function Pro() {
                 </ul>
                 <button
                   className="btn btn-primary"
-                  disabled={details.MaxMem !== accUsers.length}
+                  disabled={details.MaxMem < accUsers.length}
+                  onClick={()=>handlecomplete(details._id)}
                 >
                   Complete
                 </button>
@@ -208,4 +349,4 @@ function Pro() {
   );
 }
 
-export default Pro;
+export default View;

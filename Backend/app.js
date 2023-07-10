@@ -254,12 +254,85 @@ app.put('/request/:id', (req, res) => {
     },
     {
       $push: {
-        nivedan: req.body
+        nivedan: { name: req.body.addname, email: req.body.addemail, userid: req.body.addID }
       }
     }
   )
     .then(result => {
       res.send(result);
+    })
+    .catch(err => {
+      res.status(422).json({ error: err });
+    });
+});
+
+app.put('/accept/:id', (req, res) => {
+  console.log(req.body);
+  product.updateOne(
+    {
+      _id: req.params.id
+    },
+    {
+      $push: {
+
+        acc: { name: req.body.acceptname, email: req.body.acceptemail, userid: req.body.acceptuserid }
+      },
+      $pull:{
+        nivedan: {userid: req.body.acceptuserid}
+      }
+    }
+  )
+    .then(result => {
+      res.send(result);
+    })
+    .catch(err => {
+      res.status(422).json({ error: err });
+    });
+});
+
+app.put('/remove/:id', (req, res) => {
+  console.log(req.body);
+  product.updateOne(
+    {
+      _id: req.params.id
+    },
+    {
+      $push: {
+
+        nivedan: { name: req.body.removename, email: req.body.removeemail, userid: req.body.removeuserid }
+      },
+      $pull:{
+        acc: {userid: req.body.removeuserid}
+      }
+    }
+  )
+    .then(result => {
+      res.send(result);
+    })
+    .catch(err => {
+      res.status(422).json({ error: err });
+    });
+});
+
+app.put('/revert/:id', (req, res) => {
+  console.log(req.body);
+  product.updateOne(
+    {
+      _id: req.params.id
+    },
+    {
+      $pull: {
+
+        nivedan: { userid: req.body.revertuserid }
+      },
+    }
+  )
+    .then(result => {
+      if (result) {
+        res.send(result);
+      } else {
+        res.send("API hit to ho rha lekin pata nhi")
+      }
     })
     .catch(err => {
       res.status(422).json({ error: err });
