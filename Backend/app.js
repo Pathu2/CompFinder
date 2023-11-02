@@ -2,15 +2,15 @@ const express = require("express");
 const multer = require("multer");
 const path = require("path");
 const mongoose = require("mongoose");
+require("dotenv").config();
 const user = require("./models/user");
 const product = require("./models/product");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
-const db =
-  "mongodb+srv://bhaisab:test1234@nodejs.xgp9aar.mongodb.net/NodeJS?retryWrites=true&w=majority";
+const db = process.env.MongoDB_URI;
 const app = express();
 const Jwt = require('jsonwebtoken');
-const jwtKey="bhaisab@1$";
+const jwtKey=process.env.JWT_KEY;
 app.use(express.json());
 // app.use(bodyParser.json());
 app.use(cors());
@@ -67,7 +67,6 @@ app.post("/login", (req, res) => {
     user.findOne({ email: req.body.email })
       .then((foundUser) => {
         if (foundUser) {
-          // Compare the entered password with the hashed password
           bcrypt.compare(req.body.password, foundUser.password)
             .then((isMatch) => {
               if (isMatch) {

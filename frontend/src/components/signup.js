@@ -32,7 +32,7 @@ function Signup() {
         "Content-Type": "application/json",
       },
       /*Why we need headers */
-      body: JSON.stringify({name,email,password }),
+      body: JSON.stringify({name,email,password}),
       /*why we need to use JSON.stringify*/
       /*We need to use this because we want to send the data in json format
         and the body of the fetch accepts the string...therefore we need to convert json
